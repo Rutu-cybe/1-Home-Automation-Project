@@ -1,0 +1,124 @@
+#include<string.h>
+#include<SoftwareSerial.h>
+SoftwareSerial mySerial(2,3);//Assumption Rx,Tx
+const int soundPin=7; //pin for sound sensor
+int soundVal=0;
+int relayToggle=LOW;
+int previousState=HIGH;
+
+void setup()
+{
+  mySerial.begin(9600); //Setting the baud rate of GSM Module 
+  Serial.begin(9600);  //Setting the baud rate of serial Monitor (Arduino)
+  delay(100);
+  pinMode(13,OUTPUT);
+  pinMode(12,OUTPUT);
+  pinMode(11,OUTPUT);
+  pinMode(10,OUTPUT);
+  pinMode(soundPin,INPUT);
+  
+  mySerial.print("AT+CMGF=1\r"); //sets the GSM Module in text Mode
+  delay(1000);
+  mySerial.print("AT+CNMI=2,2,0,0,0\r"); //AT command to receive a live SMS
+  delay(1000);
+  mySerial.println("AT+CMGD=1,4"); //Delete all SMS in SIM
+  Serial.println("DELL ALL");
+  delay(1000);
+}
+void loop()
+{ 
+  int i=0;
+  char ch;
+  char data[200]={};
+  while(mySerial.available()<=0); //wait until serial data not available
+  while(mySerial.available()>0)
+  {
+    ch=mySerial.read();
+    Serial.print(ch);
+    if(ch=="#")
+    break;
+    data[i]=ch;
+    i++;
+    delay(50);
+  }
+  Serial.println("");
+  delay(1000);
+
+  
+  if(strstr(data,"light1off"))
+  {
+    Serial.println("Light 1 OFF");
+    digitalWrite(13,HIGH);
+  }
+  if(strstr(data,"light1on"))
+  {
+    Serial.println("Light 1 ON");
+    digitalWrite(13,LOW);
+  }
+
+  
+  if(strstr(data,"light2off"))
+  {
+    Serial.println("Light 2 OFF");
+    digitalWrite(12,HIGH);
+  }
+  if(strstr(data,"light2on"))
+  {
+    Serial.println("Light 2 ON");
+    digitalWrite(12,LOW);
+  }
+
+  
+  if(strstr(data,"light3off"))
+  {
+    Serial.println("Light 3 OFF");
+    digitalWrite(11,HIGH);
+  }
+  if(strstr(data,"light3on"))
+  {
+    Serial.println("Light 3 ON");
+    digitalWrite(11,LOW);
+  }
+
+  
+  if(strstr(data,"light4off"))
+  {
+    Serial.println("Light 4 OFF");
+    digitalWrite(10,HIGH);
+  }
+  if(strstr(data,"light4on"))
+  {
+    Serial.println("Light 4 ON");
+    digitalWrite(10,LOW);
+  }
+
+  
+  if(strstr(data,"alloff"))
+  {
+    Serial.println("All OFF");
+    digitalWrite(13,HIGH);
+    digitalWrite(12,HIGH);
+    digitalWrite(11,HIGH);
+    digitalWrite(10,HIGH);
+  }
+  if(strstr(data,"allon"))
+  {
+    Serial.println("ALL ON");
+    digitalWrite(13,LOW);
+    digitalWrite(12,LOW);
+    digitalWrite(11,LOW);
+    digitalWrite(10,LOW);
+  }
+
+  soundVal=digitalRead(soundPin);
+  if(soundVal==LOW && previousState==HIGH)
+  {
+      relayToggle=!relayToggle;
+      digitalWrite(13,relayToggle);//set relay value to true or false.
+      digitalWrite(12,relayToggle);
+      digitalWrite(11,relayToggle);
+      digitalWrite(10,relayToggle); 
+  }
+  previousState=soundVal;
+}
+
